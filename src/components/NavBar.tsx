@@ -14,7 +14,7 @@ export default function NavBar({
 }) {
   const navigate = useNavigate()
   const [showOpen, setShowOpen] = useState(false)
-  let authenticated = false
+  let authenticated = true
   useEffect(() => {
     const closeModalProfil = (event: MouseEvent) => {
       if (!showOpen) return

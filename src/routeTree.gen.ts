@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AdminRouteImport } from './routes/_admin'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as AdminPannelRouteImport } from './routes/_admin/pannel'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAboutRouteImport } from './routes/_app/about'
 import { Route as AppCartRouteImport } from './routes/_app/cart'
@@ -21,9 +23,18 @@ import { Route as AppOrdersRouteImport } from './routes/_app/orders'
 import { Route as AppProfilRouteImport } from './routes/_app/profil'
 import { Route as AppProductProducttIdRouteImport } from './routes/_app/product.$producttId'
 
+const AdminRoute = AdminRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPannelRoute = AdminPannelRouteImport.update({
+  id: '/pannel',
+  path: '/pannel',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
@@ -78,6 +89,7 @@ const AppProductProducttIdRoute = AppProductProducttIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/pannel': typeof AdminPannelRoute
   '/about': typeof AppAboutRoute
   '/cart': typeof AppCartRoute
   '/collection': typeof AppCollectionRoute
@@ -89,6 +101,8 @@ export interface FileRoutesByFullPath {
   '/product/$producttId': typeof AppProductProducttIdRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AppIndexRoute
+  '/pannel': typeof AdminPannelRoute
   '/about': typeof AppAboutRoute
   '/cart': typeof AppCartRoute
   '/collection': typeof AppCollectionRoute
@@ -97,12 +111,13 @@ export interface FileRoutesByTo {
   '/login': typeof AppLoginRoute
   '/orders': typeof AppOrdersRoute
   '/profil': typeof AppProfilRoute
-  '/': typeof AppIndexRoute
   '/product/$producttId': typeof AppProductProducttIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/_admin': typeof AdminRouteWithChildren
   '/_app': typeof AppRouteWithChildren
+  '/_admin/pannel': typeof AdminPannelRoute
   '/_app/about': typeof AppAboutRoute
   '/_app/cart': typeof AppCartRoute
   '/_app/collection': typeof AppCollectionRoute
@@ -118,6 +133,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/pannel'
     | '/about'
     | '/cart'
     | '/collection'
@@ -129,6 +145,8 @@ export interface FileRouteTypes {
     | '/product/$producttId'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
+    | '/pannel'
     | '/about'
     | '/cart'
     | '/collection'
@@ -137,11 +155,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/orders'
     | '/profil'
-    | '/'
     | '/product/$producttId'
   id:
     | '__root__'
+    | '/_admin'
     | '/_app'
+    | '/_admin/pannel'
     | '/_app/about'
     | '/_app/cart'
     | '/_app/collection'
@@ -155,17 +174,32 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_admin': {
+      id: '/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_admin/pannel': {
+      id: '/_admin/pannel'
+      path: '/pannel'
+      fullPath: '/pannel'
+      preLoaderRoute: typeof AdminPannelRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_app/': {
       id: '/_app/'
@@ -240,6 +274,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminPannelRoute: typeof AdminPannelRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminPannelRoute: AdminPannelRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface AppRouteChildren {
   AppAboutRoute: typeof AppAboutRoute
   AppCartRoute: typeof AppCartRoute
@@ -269,6 +313,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport

@@ -1,9 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_app/profil')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  return <div>Hello "/_app/profil"!</div>
+  return (
+    <div>
+      <Link to="/pannel" search={{ admin: 'd,,d' }}>
+        <button className="btn">Pannel admin</button>
+      </Link>
+    </div>
+  )
 }
