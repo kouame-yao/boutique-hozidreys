@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="72" viewBox="0 0 260 72" fill="none">
+  <g stroke="#A87968" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="36" cy="36" r="27"/>
+    <path d="M24 49c2-13 9-22 23-28-1 14-8 23-23 28Z"/>
+    <path d="M24 49c5-8 11-14 19-20"/>
+    <path d="M22 53h28"/>
+  </g>
+  <text x="76" y="39" fill="#302724" font-family="Georgia, 'Times New Roman', serif" font-size="26" letter-spacing="1.6">HOZIDREYS</text>
+  <text x="78" y="57" fill="#A87968" font-family="Arial, Helvetica, sans-serif" font-size="10" letter-spacing="3.1">COSMÉTIQUE</text>
+</svg>
