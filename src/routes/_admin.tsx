@@ -1,4 +1,3 @@
-import SideBar from '#/components/SideBar'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 

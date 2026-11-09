@@ -17,10 +17,22 @@ export type AdminProduct = {
 }
 
 export type AdminCategory = {
-  id: string
+  id?: string
   name: string
   productCount: number
   description?: string
+}
+
+export type AdminStockMovement = {
+  id: string
+  productId: string
+  productName: string
+  sku: string
+  type: 'Ajout' | 'Retrait'
+  quantity: number
+  description?: string
+  date: string
+  dateISO: string
 }
 
 export type AdminOrder = {

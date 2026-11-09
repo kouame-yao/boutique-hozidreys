@@ -1,16 +1,19 @@
 import type { AdminPage } from '#/hook/current-page-admin'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import {
   Bell,
   ChartNoAxesCombined,
   LayoutDashboard,
+  LogOut,
   Menu,
   Package,
   Plus,
   ShoppingCart,
   Sparkles,
+  Store,
   Tags,
   X,
+  Warehouse,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
@@ -24,6 +27,7 @@ const navigationItems: {
   { id: 'analytics', label: 'Analytique', icon: ChartNoAxesCombined },
   { id: 'orders', label: 'Commandes', icon: ShoppingCart },
   { id: 'products', label: 'Produits', icon: Package },
+  { id: 'inventory', label: 'Stock', icon: Warehouse },
   { id: 'categories', label: 'Catégories', icon: Tags },
   { id: 'alerts', label: 'Alertes', icon: Bell },
 ]
@@ -40,6 +44,7 @@ export default function SideBar({
   alertCount: number
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const navigate = useNavigate()
 
   function navigateTo(page: AdminPage) {
     setPageLayout(page)
@@ -130,8 +135,8 @@ export default function SideBar({
       </aside>
 
       <main className="min-h-screen md:ml-64">
-        <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-[#eee8e2] bg-white/95 px-4 backdrop-blur sm:px-7">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between gap-2 border-b border-[#eee8e2] bg-white/95 px-3 backdrop-blur sm:px-7">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <button
               aria-label="Ouvrir le menu"
               onClick={() => setMobileMenuOpen(true)}
@@ -140,7 +145,7 @@ export default function SideBar({
               <Menu size={19} />
             </button>
             <div>
-              <p className="text-sm font-semibold text-[#302724]">
+              <p className="whitespace-nowrap text-xs font-semibold text-[#302724] sm:text-sm">
                 Espace administration
               </p>
               <p className="hidden text-xs text-[#8d817a] sm:block">
@@ -148,11 +153,12 @@ export default function SideBar({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-3">
             <button
               aria-label={`${alertCount} alerte(s) active(s)`}
+              title="Alertes"
               onClick={() => setPageLayout('alerts')}
-              className="relative rounded-xl border border-[#eee8e2] p-2 text-[#71655e] hover:bg-[#faf8f6]"
+              className="relative rounded-xl border border-[#eee8e2] p-1.5 text-[#71655e] hover:bg-[#faf8f6] sm:p-2"
             >
               <Bell size={18} />
               {alertCount > 0 && (
@@ -161,18 +167,41 @@ export default function SideBar({
                 </span>
               )}
             </button>
-            <div className="hidden text-right sm:block">
+            <div className="hidden text-right lg:block">
               <p className="text-sm font-medium text-[#302724]">Awa Diop</p>
               <p className="text-xs text-[#8d817a]">Administratrice</p>
             </div>
-            <span className="flex size-10 items-center justify-center rounded-full bg-[#eadbd2] text-sm font-semibold text-[#805e50]">
-              AD
-            </span>
             <Link
-              to="/"
-              className="hidden rounded-xl border border-[#eee8e2] px-3 py-2 text-xs font-medium text-[#625650] hover:bg-[#faf8f6] sm:inline-flex"
+              aria-label="Aller à mon profil"
+              title="Mon profil"
+              onClick={() => setMobileMenuOpen(false)}
+              to="/profil"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#eee8e2] p-1.5 text-xs font-medium text-[#625650] hover:bg-[#faf8f6] sm:px-3 sm:py-2"
             >
-              Voir la boutique
+              <span className="flex size-5 items-center justify-center rounded-full bg-[#eadbd2] text-[9px] font-semibold text-[#805e50] sm:size-6">
+                AD
+              </span>
+              <span className="hidden md:inline">Profil</span>
+            </Link>
+            <button
+              type="button"
+              aria-label="Se déconnecter"
+              title="Se déconnecter"
+              onClick={() => navigate({ to: '/login' })}
+              className="inline-flex items-center gap-2 rounded-xl border border-[#eee8e2] p-1.5 text-xs font-medium text-[#625650] transition hover:bg-[#fbefed] hover:text-[#ad625a] sm:px-3 sm:py-2"
+            >
+              <LogOut size={17} />
+              <span className="hidden md:inline">Déconnexion</span>
+            </button>
+            <Link
+              aria-label="Retourner à la boutique"
+              title="Voir la boutique"
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="inline-flex items-center gap-2 rounded-xl border border-[#eee8e2] p-1.5 text-xs font-medium text-[#625650] hover:bg-[#faf8f6] sm:px-3 sm:py-2"
+            >
+              <Store size={17} />
+              <span className="hidden md:inline">Boutique</span>
             </Link>
           </div>
         </header>

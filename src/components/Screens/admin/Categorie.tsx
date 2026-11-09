@@ -1,55 +1,79 @@
-import { Pencil, Plus, Tag, Trash2, X } from 'lucide-react'
-import type { FormEvent } from 'react'
+import FormField from '#/components/FormField'
+import Loader from '#/components/Loader'
+import {
+  useAddCat,
+  useAllCat,
+  useDeleteCat,
+  useUpdateCat,
+} from '#/hook/admin-query-hook/categorie'
+import { categorySchema, type categoryType } from '#/schema'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Pencil, Plus, Tag, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import type { AdminCategory, AdminProduct } from './adminData'
-import { AdminPageHeader, EmptyState } from './AdminShared'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
+import { AdminPageHeader } from './AdminShared'
+export default function Categorie() {
+  const [showModale, setShowMoadale] = useState(false)
+  const [category, setCategory] = useState<categoryType | null>(null)
 
-export default function Categorie({
-  categories,
-  products,
-  onAddCategory,
-  onRenameCategory,
-  onDeleteCategory,
-}: {
-  categories: AdminCategory[]
-  products: AdminProduct[]
-  onAddCategory: (name: string) => void
-  onRenameCategory: (id: string, name: string) => void
-  onDeleteCategory: (id: string) => void
-}) {
-  const [name, setName] = useState('')
-  const [message, setMessage] = useState('')
-  const [editingCategory, setEditingCategory] = useState<AdminCategory | null>(
-    null,
-  )
-  const [editName, setEditName] = useState('')
-  const [editMessage, setEditMessage] = useState('')
+  const addCategorieMutation = useAddCat()
+  const updateCategorieMutation = useUpdateCat()
+  const deleteCategorieMutation = useDeleteCat()
+  const allCategorieQuery = useAllCat()
+  const dataCategorieQuery = allCategorieQuery.data ?? []
 
-  function productCount(categoryName: string) {
-    return products.filter((product) => product.category === categoryName)
-      .length
+  const addCategorieForm = useForm({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      productCount: 0,
+    },
+  })
+
+  let errors = addCategorieForm.formState.errors
+  addCategorieForm.setValue('productCount', 0)
+
+  const onsubmitUpdateCat = (data: Partial<categoryType>) => {
+    updateCategorieMutation.mutate(
+      { id: data.id, ...data },
+      {
+        onSuccess: () => {
+          toast.success('Catégorie modifier avec succès')
+          setShowMoadale(false)
+          setCategory(null)
+        },
+        onError: (error) => {
+          console.log(error)
+          toast.error('Une erreur est survenu')
+        },
+      },
+    )
   }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const normalizedName = name.trim()
-    if (!normalizedName) {
-      setMessage('Saisissez un nom de catégorie.')
-      return
-    }
-    if (
-      categories.some(
-        (category) =>
-          category.name.toLowerCase() === normalizedName.toLowerCase(),
-      )
-    ) {
-      setMessage('Cette catégorie existe déjà.')
-      return
-    }
-
-    onAddCategory(normalizedName)
-    setName('')
-    setMessage('')
+  const onsubmitAddCat = (data: categoryType) => {
+    addCategorieMutation.mutate(data, {
+      onSuccess: () => {
+        toast.success('Categorie ajouter avec succès')
+        addCategorieForm.reset({
+          name: '',
+          description: '',
+        })
+      },
+      onError: (error) => {
+        console.log(error)
+        toast.error('Une erreur est survenue')
+      },
+    })
+  }
+  const onsubmitDeleteCat = (id: string) => {
+    deleteCategorieMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success('Categorie ajouter avec succès')
+      },
+      onError: (error) => {
+        console.log(error)
+        toast.error('Une erreur est survenue')
+      },
+    })
   }
 
   return (
@@ -59,7 +83,6 @@ export default function Categorie({
         title="Catégories"
         description="Organisez votre catalogue pour aider vos clientes à trouver leurs essentiels."
       />
-
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <section className="rounded-2xl border border-[#eee8e2] bg-white p-5 sm:p-6">
           <div className="mb-5 flex items-center justify-between">
@@ -68,63 +91,29 @@ export default function Categorie({
                 Toutes les catégories
               </h2>
               <p className="mt-1 text-sm text-[#8d817a]">
-                {categories.length} catégories dans votre catalogue
+                {dataCategorieQuery.length &&
+                  `${dataCategorieQuery.length} catégories dans votre catalogue`}
               </p>
             </div>
             <span className="flex size-10 items-center justify-center rounded-xl bg-[#f7f0eb] text-[#a87968]">
               <Tag size={19} />
             </span>
           </div>
-
-          {categories.length === 0 ? (
-            <EmptyState>Ajoutez votre première catégorie.</EmptyState>
-          ) : (
-            <div className="divide-y divide-[#f3efeb]">
-              {categories.map((category) => (
-                <div
-                  key={category.id}
-                  className="flex items-center justify-between gap-3 py-4 first:pt-1 last:pb-1"
-                >
-                  <div>
-                    <p className="font-medium text-[#302724]">
-                      {category.name}
-                    </p>
-                    <p className="mt-1 text-xs text-[#8d817a]">
-                      {productCount(category.name)} produits
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      aria-label={`Modifier la catégorie ${category.name}`}
-                      onClick={() => {
-                        setEditingCategory(category)
-                        setEditName(category.name)
-                        setEditMessage('')
-                      }}
-                      className="rounded-lg p-2 text-[#71655e] hover:bg-[#f7f0eb] hover:text-[#a87968]"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      aria-label={`Supprimer la catégorie ${category.name}`}
-                      disabled={productCount(category.name) > 0}
-                      title={
-                        productCount(category.name) > 0
-                          ? 'Cette catégorie contient des produits'
-                          : 'Supprimer cette catégorie'
-                      }
-                      onClick={() => onDeleteCategory(category.id)}
-                      className="rounded-lg p-2 text-[#a99c94] transition hover:bg-[#fbefed] hover:text-[#b05d54] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="divide-y divide-[#f3efeb]">
+            {!allCategorieQuery.isFetched
+              ? 'chargement des données'
+              : dataCategorieQuery.map((cat) => (
+                  <CategoryRow
+                    open={setShowMoadale}
+                    key={cat.id}
+                    category={cat}
+                    setCategory={setCategory}
+                    onDeleteCat={onsubmitDeleteCat}
+                    isloading={deleteCategorieMutation.isPending}
+                  />
+                ))}
+          </div>
         </section>
-
         <section className="h-fit rounded-2xl border border-[#eee8e2] bg-white p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-[#302724]">
             Nouvelle catégorie
@@ -132,130 +121,168 @@ export default function Categorie({
           <p className="mt-1 text-sm text-[#8d817a]">
             Créez un nouveau rayon beauté.
           </p>
-          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-            <div>
-              <label
-                htmlFor="category-name"
-                className="mb-2 block text-sm font-medium text-[#302724]"
-              >
-                Nom
-              </label>
+          <form
+            className="mt-5 space-y-4"
+            onSubmit={addCategorieForm.handleSubmit(onsubmitAddCat)}
+          >
+            <FormField label="Nom" error={errors.name?.message}>
               <input
-                id="category-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                {...addCategorieForm.register('name')}
                 placeholder="Ex. Parfums"
                 className="w-full rounded-xl border border-[#eee8e2] px-4 py-3 text-sm outline-none focus:border-[#c6a18f]"
               />
-            </div>
-            {message && (
-              <p role="alert" className="text-sm text-[#b05d54]">
-                {message}
-              </p>
-            )}
+            </FormField>
+            <FormField label="Description" error={errors.description?.message}>
+              <textarea
+                {...addCategorieForm.register('description')}
+                rows={3}
+                placeholder="Décrivez cette catégorie..."
+                className="w-full rounded-xl border border-[#eee8e2] px-4 py-3 text-sm outline-none focus:border-[#c6a18f]"
+              />
+            </FormField>
             <button
               type="submit"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#302724] px-4 py-3 text-sm font-medium text-white hover:bg-[#51413a]"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#302724] px-4 py-3 text-sm font-medium text-white"
             >
-              <Plus size={17} />
-              Créer la catégorie
+              <Loader
+                isloading={addCategorieMutation.isPending}
+                title={
+                  <>
+                    <Plus size={17} />
+                    Créer la catégorie
+                  </>
+                }
+              />
             </button>
           </form>
-          <p className="mt-4 text-xs leading-5 text-[#8d817a]">
-            Les catégories créées sont conservées uniquement en mémoire pendant
-            cette démonstration.
-          </p>
         </section>
+        {showModale && (
+          <ModaleEditCategorie
+            onEditCat={onsubmitUpdateCat}
+            category={category}
+            close={setShowMoadale}
+            isloading={updateCategorieMutation.isPending}
+          />
+        )}
       </div>
-      {editingCategory && (
-        <div
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setEditingCategory(null)
-          }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#302724]/40 p-4"
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-category-title"
-            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl sm:p-6"
-          >
-            <div className="mb-5 flex items-center justify-between">
-              <h2
-                id="edit-category-title"
-                className="text-xl font-semibold text-[#302724]"
-              >
-                Modifier la catégorie
-              </h2>
-              <button
-                aria-label="Fermer"
-                onClick={() => setEditingCategory(null)}
-                className="rounded-xl border border-[#eee8e2] p-2 text-[#71655e]"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault()
-                const normalizedName = editName.trim()
-                if (!normalizedName) {
-                  setEditMessage('Saisissez un nom de catégorie.')
-                  return
-                }
-                if (
-                  categories.some(
-                    (category) =>
-                      category.id !== editingCategory.id &&
-                      category.name.toLowerCase() ===
-                        normalizedName.toLowerCase(),
-                  )
-                ) {
-                  setEditMessage('Cette catégorie existe déjà.')
-                  return
-                }
-                onRenameCategory(editingCategory.id, normalizedName)
-                setEditingCategory(null)
-              }}
-              className="space-y-4"
-            >
-              <label className="block text-sm font-medium text-[#302724]">
-                <span className="mb-2 block">Nom</span>
-                <input
-                  autoFocus
-                  value={editName}
-                  onChange={(event) => setEditName(event.target.value)}
-                  className="w-full rounded-xl border border-[#eee8e2] px-4 py-3 text-sm outline-none focus:border-[#c6a18f]"
-                />
-              </label>
-              <p className="text-xs leading-5 text-[#8d817a]">
-                Le nom sera également mis à jour sur les produits associés.
-              </p>
-              {editMessage && (
-                <p role="alert" className="text-sm text-[#b05d54]">
-                  {editMessage}
-                </p>
-              )}
-              <div className="flex justify-end gap-3 border-t border-[#f3efeb] pt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditingCategory(null)}
-                  className="rounded-xl border border-[#eee8e2] px-4 py-2.5 text-sm text-[#625650]"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-[#302724] px-4 py-2.5 text-sm font-medium text-white"
-                >
-                  Enregistrer
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
-      )}
     </div>
+  )
+}
+
+function CategoryRow({
+  category,
+  open,
+  setCategory,
+  onDeleteCat,
+  isloading,
+}: {
+  category: categoryType | null
+  open: (value: boolean) => void
+  setCategory: (value: categoryType | null) => void
+  onDeleteCat: (value: string) => void
+  isloading: boolean
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-4">
+      <div>
+        <p className="font-medium text-[#302724]">{category?.name}</p>
+        <p className="mt-1 text-xs text-[#8d817a]">{category?.productCount}</p>
+      </div>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => {
+            open(true)
+            setCategory(category)
+          }}
+          type="button"
+          aria-label={`Modifier ${name}`}
+          className="rounded-lg p-2 text-[#71655e] hover:bg-[#f7f0eb]"
+        >
+          <Pencil size={16} />
+        </button>
+        <button
+          disabled={isloading}
+          onClick={() => onDeleteCat(category?.id as string)}
+          type="button"
+          aria-label={`Supprimer ${name}`}
+          className="rounded-lg p-2 text-[#a99c94] hover:bg-[#fbefed] hover:text-[#b05d54]"
+        >
+          <Loader isloading={isloading} title={<Trash2 size={16} />} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ModaleEditCategorie({
+  close,
+  category,
+  onEditCat,
+  isloading,
+}: {
+  category: categoryType | null
+  onEditCat: (value: Partial<categoryType>) => void
+  close: (value: boolean) => void
+  isloading: boolean
+}) {
+  const updateCategorieForm = useForm({
+    resolver: zodResolver(categorySchema.partial()),
+  })
+  let errors = updateCategorieForm.formState.errors
+  updateCategorieForm.setValue('id', category?.id)
+
+  const onsubmitUpdateCat = (data: Partial<categoryType>) => {
+    onEditCat(data)
+  }
+  return (
+    <main
+      onMouseDown={(event) => {
+        event.target === event.currentTarget && !isloading && close(false)
+      }}
+      className="fixed h-screen w-screen bg-black/35 z-50 inset-0 grid justify-center items-center "
+    >
+      <section className="rounded-2xl border border-[#eee8e2] bg-white p-5">
+        <h2 className="font-semibold text-[#302724]">Aperçu de modification</h2>
+        <p className="mt-1 text-sm text-[#8d817a]">modifier une catégorie.</p>
+        <form onSubmit={updateCategorieForm.handleSubmit(onsubmitUpdateCat)}>
+          <div className="mt-4 grid gap-4 ">
+            <FormField label="Name" error={errors.name?.message}>
+              <input
+                {...updateCategorieForm.register('name')}
+                defaultValue={category?.name}
+                className="rounded-xl border border-[#eee8e2] px-4 py-3 text-sm w-full"
+              />
+            </FormField>
+            <FormField label="Description" error={errors.description?.message}>
+              <textarea
+                {...updateCategorieForm.register('description')}
+                defaultValue={category?.description}
+                className="rounded-xl border border-[#eee8e2] px-4 py-3 text-sm w-full"
+              />
+            </FormField>
+          </div>
+          <div className="flex gap-4">
+            <button
+              disabled={isloading}
+              onClick={() => close(false)}
+              type="button"
+              className="mt-4 rounded-xl border border-[#eee8e2] px-4 py-2.5 text-sm text-[#625650]"
+            >
+              Annuler
+            </button>
+            <button
+              disabled={isloading}
+              type="submit"
+              className="mt-4 rounded-xl border border-[#eee8e2] px-4 py-2.5 text-sm text-[#625650]"
+            >
+              <Loader
+                isloading={isloading}
+                title={'Enregistrer les modifications'}
+              />
+            </button>
+          </div>
+        </form>
+      </section>
+    </main>
   )
 }
