@@ -1,6 +1,6 @@
 import { db } from '#/config/firebase'
 import { ErrorServer } from '#/middlewares/validator'
-import type { productType } from '#/schema'
+import type { productType, stockMouvementType } from '#/schema'
 import type { DocumentData, DocumentReference } from 'firebase/firestore'
 import {
   addDoc,
@@ -28,11 +28,26 @@ const createProduct = async (
 
 const allProduct = async (): Promise<productType[]> => {
   const querySnapshot = await getDocs(collection(db, collections))
+  const querySnapshotStok = await getDocs(collection(db, 'AdminStockMovement'))
+  const newStock = (productId: string) => {
+    return querySnapshotStok.docs
+      .filter((docS) => {
+        const data = docS.data() as stockMouvementType
+
+        return data.productId === productId
+      })
+      .reduce((total, stock) => {
+        const data = stock.data() as stockMouvementType
+        return total + (data.type === 'Ajout' ? data.quantity : -data.quantity)
+      }, 0)
+  }
+
   const table: productType[] = []
   querySnapshot.forEach((docs) => {
     const data = docs.data()
     table.push({
       id: docs.id,
+      stock: Number(newStock(docs.id)) ? Number(newStock(docs.id)) : 0,
       ...data,
       created_at:
         data.created_at instanceof Timestamp

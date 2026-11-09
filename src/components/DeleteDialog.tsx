@@ -8,7 +8,7 @@ interface DeleteDialogProps {
   confirmText?: string
   cancelText?: string
   onConfirm: () => void
-  onCancel: () => void
+  onCancel: (value: boolean) => void
   loading?: boolean
 }
 
@@ -63,7 +63,7 @@ export default function DeleteDialog({
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={() => onCancel(false)}
             disabled={loading}
             className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 disabled:opacity-50"
           >

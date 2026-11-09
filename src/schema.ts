@@ -19,8 +19,8 @@ export const productSchema = z.object({
   sku: z.string(),
   category: z.string(),
   price: z.number(),
-  promotionalPrice: z.number().optional(),
-  stock: z.number(),
+  promotionalPrice: z.number().optional().default(0),
+  stock: z.number().optional(),
   lowStockThreshold: z.number().optional(),
   sold: z.number(),
   description: z.string().optional(),
@@ -37,17 +37,27 @@ export const productSchema = z.object({
 
 export type productType = z.infer<typeof productSchema>
 
-export const stockMouvementSchema = z.object({
-  id: z.string(),
-  author: z.string().optional(),
-  productId: z.string(),
-  productName: z.string(),
-  sku: z.string(),
-  type: z.enum(['Ajout', 'Retrait']),
-  quantity: z.number().default(0),
-  description: z.string().optional(),
-  created_at: z.date().default(() => new Date()),
-  updated_at: z.date().optional(),
-})
+export const stockMouvementSchema = z
+  .object({
+    id: z.string().optional(),
+    author: z.string().optional(),
+    productId: z.string(),
+    productName: z.string(),
+    sku: z.string().optional(),
+    type: z.enum(['Ajout', 'Retrait']),
+    quantity: z.number().default(0),
+    description: z.string().optional(),
+    created_at: z.date().default(() => new Date()),
+    updated_at: z.date().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === 'Retrait' && data.description === '') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['description'],
+        message: 'La justification est obligatoire pour le retrait',
+      })
+    }
+  })
 
 export type stockMouvementType = z.infer<typeof stockMouvementSchema>

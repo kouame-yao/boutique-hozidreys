@@ -32,11 +32,11 @@ export function useCurrentPageAdmin() {
       case 'alerts':
         return <Alerts />
       case 'products':
-        return <Product />
+        return <Product setPageLayout={setPageLayout} />
       case 'categories':
         return <Categorie />
       case 'new-product':
-        return <NewProduct />
+        return <NewProduct setPageLayout={setPageLayout} />
       case 'dashboard':
       default:
         return <Dashboad />

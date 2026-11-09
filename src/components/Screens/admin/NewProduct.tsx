@@ -1,7 +1,59 @@
+import FormField from '#/components/FormField'
+import Loader from '#/components/Loader'
+import { useAllCat } from '#/hook/admin-query-hook/categorie'
+import { useAddProd } from '#/hook/admin-query-hook/product'
+import type { AdminPage } from '#/hook/current-page-admin'
+import { productSchema, type productType } from '#/schema'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, ImagePlus, X } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import { AdminPageHeader } from './AdminShared'
 
-export default function NewProduct() {
+export default function NewProduct({
+  setPageLayout,
+}: {
+  setPageLayout: (value: AdminPage) => void
+}) {
+  const addProductForm = useForm({ resolver: zodResolver(productSchema) })
+  const addProductMutation = useAddProd()
+
+  const allCategorieQuery = useAllCat()
+  const dataCategorieQuery = allCategorieQuery.data ?? []
+
+  let errors = addProductForm.formState.errors
+
+  addProductForm.setValue('sold', 0)
+  addProductForm.setValue('images', ['une image'])
+  const onSubmitAddProduct = (data: productType) => {
+    addProductMutation.mutate(
+      {
+        ...data,
+        lowStockThreshold: Number(data.lowStockThreshold),
+      },
+      {
+        onSuccess: () => {
+          toast.success('Produit ajouter avec succès')
+          addProductForm.reset({
+            name: '',
+            sku: '',
+            category: '',
+            price: 0,
+            promotionalPrice: 0,
+            lowStockThreshold: 0,
+            description: '',
+            ingredients: '',
+            images: [],
+          })
+        },
+        onError: (error) => {
+          console.log(error)
+          toast.error('Une erreur est survenu')
+        },
+      },
+    )
+  }
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -10,6 +62,7 @@ export default function NewProduct() {
         description="Complétez les informations pour enrichir votre boutique."
         action={
           <button
+            onClick={() => setPageLayout('products')}
             type="button"
             className="inline-flex items-center gap-2 rounded-xl border border-[#e7ddd5] bg-white px-4 py-3 text-sm font-medium text-[#625650]"
           >
@@ -19,54 +72,96 @@ export default function NewProduct() {
         }
       />
       <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
-        <section className="space-y-5 rounded-2xl border border-[#eee8e2] bg-white p-5 sm:p-7">
-          <Field label="Nom du produit">
+        <form
+          onSubmit={addProductForm.handleSubmit(onSubmitAddProduct)}
+          className="space-y-5 rounded-2xl border border-[#eee8e2] bg-white p-5 sm:p-7"
+        >
+          <FormField label="Nom du produit" error={errors.name?.message}>
             <input
+              {...addProductForm.register('name')}
               placeholder="Ex. Crème hydratante au karité"
               className={inputClass}
             />
-          </Field>
+          </FormField>
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Référence (SKU)">
-              <input placeholder="HOZ-CRE-006" className={inputClass} />
-            </Field>
-            <Field label="Catégorie">
-              <select className={inputClass} defaultValue="">
+            <FormField label="Référence (SKU)" error={errors.sku?.message}>
+              <input
+                {...addProductForm.register('sku')}
+                placeholder="HOZ-CRE-006"
+                className={inputClass}
+              />
+            </FormField>
+            <FormField label="Catégorie" error={errors.category?.message}>
+              <select
+                className={inputClass}
+                defaultValue=""
+                {...addProductForm.register('category')}
+              >
                 <option value="">Sélectionnez une catégorie</option>
-                <option>Soins du visage</option>
-                <option>Soins du corps</option>
-                <option>Cheveux</option>
+                {dataCategorieQuery.map((cat) => (
+                  <option value={cat.id}>{cat.name}</option>
+                ))}
               </select>
-            </Field>
+            </FormField>
           </div>
           <div className="grid gap-5 sm:grid-cols-3">
-            <Field label="Prix (FCFA)">
-              <input min="1" type="number" placeholder="12500" className={inputClass} />
-            </Field>
-            <Field label="Prix promotionnel (facultatif)">
-              <input type="number" placeholder="Ex. 10 000" className={inputClass} />
+            <FormField label="Prix (FCFA)" error={errors.price?.message}>
+              <input
+                {...addProductForm.register('price', { valueAsNumber: true })}
+                min="1"
+                type="number"
+                placeholder="12500"
+                className={inputClass}
+              />
+            </FormField>
+            <FormField
+              label="Prix promotionnel (facultatif)"
+              error={errors.promotionalPrice?.message}
+            >
+              <input
+                defaultValue={0}
+                {...addProductForm.register('promotionalPrice', {
+                  valueAsNumber: true,
+                })}
+                type="number"
+                placeholder="Ex. 10 000"
+                className={inputClass}
+              />
               <p className="mt-1.5 text-xs text-[#8d817a]">
                 Doit être inférieur au prix normal.
               </p>
-            </Field>
-            <Field label="Seuil d’alerte stock bas">
-              <input min="0" type="number" defaultValue="5" className={inputClass} />
-            </Field>
+            </FormField>
+            <FormField
+              label="Seuil d’alerte stock bas"
+              error={errors.lowStockThreshold?.message}
+            >
+              <input
+                {...addProductForm.register('lowStockThreshold', {
+                  valueAsNumber: true,
+                })}
+                min="0"
+                type="number"
+                defaultValue="5"
+                className={inputClass}
+              />
+            </FormField>
           </div>
-          <Field label="Description">
+          <FormField label="Description" error={errors.description?.message}>
             <textarea
+              {...addProductForm.register('description')}
               rows={5}
               placeholder="Présentez les bienfaits et les caractéristiques du produit..."
               className={inputClass}
             />
-          </Field>
-          <Field label="Ingrédients">
+          </FormField>
+          <FormField label="Ingrédients" error={errors.ingredients?.message}>
             <textarea
+              {...addProductForm.register('ingredients')}
               rows={3}
               placeholder="Ex. Beurre de karité, aloe vera, vitamine E..."
               className={inputClass}
             />
-          </Field>
+          </FormField>
           <div className="flex flex-wrap justify-end gap-3 border-t border-[#f3efeb] pt-5">
             <button
               type="button"
@@ -75,13 +170,18 @@ export default function NewProduct() {
               Annuler
             </button>
             <button
-              type="button"
+              disabled={addProductMutation.isPending}
+              type="submit"
               className="rounded-xl bg-[#302724] px-5 py-3 text-sm font-medium text-white"
             >
-              Enregistrer le produit
+              <Loader
+                isloading={addProductMutation.isPending}
+                title={'Enregistrer le produit'}
+              />
             </button>
           </div>
-        </section>
+        </form>
+
         <aside className="space-y-4 rounded-2xl border border-[#eee8e2] bg-white p-5 sm:p-6">
           <div>
             <h2 className="font-semibold text-[#302724]">Photos du produit</h2>
@@ -125,21 +225,6 @@ export default function NewProduct() {
         </aside>
       </div>
     </div>
-  )
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <label className="block text-sm font-medium text-[#302724]">
-      <span className="mb-2 block">{label}</span>
-      {children}
-    </label>
   )
 }
 

@@ -1,3 +1,4 @@
+import DeleteDialog from '#/components/DeleteDialog'
 import FormField from '#/components/FormField'
 import Loader from '#/components/Loader'
 import {
@@ -182,8 +183,20 @@ function CategoryRow({
   onDeleteCat: (value: string) => void
   isloading: boolean
 }) {
+  const [isOpenDeleteAlert, setOpenDeleteAlert] = useState(false)
+  const confirmDelete = () => {
+    onDeleteCat(category?.id as string)
+  }
   return (
     <div className="flex items-center justify-between gap-3 py-4">
+      {isOpenDeleteAlert && (
+        <DeleteDialog
+          onConfirm={confirmDelete}
+          isOpen={isOpenDeleteAlert}
+          onCancel={setOpenDeleteAlert}
+          loading={isloading}
+        />
+      )}
       <div>
         <p className="font-medium text-[#302724]">{category?.name}</p>
         <p className="mt-1 text-xs text-[#8d817a]">{category?.productCount}</p>
@@ -201,13 +214,12 @@ function CategoryRow({
           <Pencil size={16} />
         </button>
         <button
-          disabled={isloading}
-          onClick={() => onDeleteCat(category?.id as string)}
+          onClick={() => setOpenDeleteAlert(true)}
           type="button"
           aria-label={`Supprimer ${name}`}
           className="rounded-lg p-2 text-[#a99c94] hover:bg-[#fbefed] hover:text-[#b05d54]"
         >
-          <Loader isloading={isloading} title={<Trash2 size={16} />} />
+          <Trash2 size={16} />
         </button>
       </div>
     </div>
