@@ -1,65 +1,87 @@
-import { createFileRoute } from '@tanstack/react-router'
-import imageUlistration from '#/asset/Rectangle 3634.png'
-import { StarIcon } from 'lucide-react'
-import TitleBar from '#/components/TitleBar'
 import CardProduct from '#/components/CardProduct'
+import TitleBar from '#/components/TitleBar'
+import { useAllProd } from '#/hook/admin-query-hook/product'
+import type { productType } from '#/schema'
+import { allProductFn } from '#/servers/admin/product-server'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { StarIcon } from 'lucide-react'
 export const Route = createFileRoute('/_app/product/$producttId')({
   component: RouteComponent,
+  loader: async ({ params }) => {
+    const data = await allProductFn()
+    const existe = data.some((prod) => prod.id === params.producttId)
+    if (!existe) {
+      throw redirect({ to: '/' })
+    }
+    const product = data.find((prod) => prod.id === params.producttId)
+    return product
+  },
 })
 
 function RouteComponent() {
+  const data = Route.useLoaderData()
+  const allproduct = useAllProd()
+  const productData =
+    allproduct.data?.filter((prod) => prod.id !== data?.id) ?? []
   return (
     <main>
       <div className="md:flex grid md:gap-x-[51px] mb-[157px] ">
-        <ViewProductImage />
-        <DetailProduct />
+        <ViewProductImage images={data?.images ?? []} />
+        <DetailProduct productDetail={data} />
       </div>
 
-      <DescriptionAvis />
-      <RelateProduct />
+      {/* <DescriptionAvis /> */}
+      {productData.length !== 0 && <RelateProduct product={productData} />}
     </main>
   )
 }
 
-const ViewProductImage = () => {
+const ViewProductImage = ({ images }: { images: string[] }) => {
   return (
     <div className="mb-6 w-full md:mb-0 md:w-[591px]">
       <section className="flex w-full flex-col gap-3 md:h-[681px] md:flex-row md:gap-x-[17px]">
         <div className="order-2 grid grid-cols-4 gap-3 md:order-1 md:flex md:flex-col md:gap-[12px]">
-          {[1, 2, 3, 4].map((p) => (
+          {images.map((src) => (
             <img
-              key={p}
-              src={imageUlistration}
+              key={src}
+              src={src}
               alt=""
               className="aspect-[138/159] w-full object-cover md:h-[159px] md:w-[138px]"
             />
           ))}
         </div>
         <div className="order-1 min-w-0 md:order-2 md:flex-1">
-          <img src={imageUlistration} alt="" className="h-auto w-full" />
+          <img src={images[0]} alt="" className="h-100 w-80 object-cover" />
         </div>
       </section>
     </div>
   )
 }
 
-const DetailProduct = () => {
+const DetailProduct = ({
+  productDetail,
+}: {
+  productDetail: productType | undefined
+}) => {
   return (
     <div>
       <div className="flex flex-col">
         <h2 className="md:text-[34px] font-medium mb-[13px] ">
-          Sérum éclat à la vitamine C
+          {productDetail?.name}
         </h2>
         <div className="flex items-center mb-[27px]">
           {[1, 2, 3, 4].map((s) => (
-            <StarIcon />
+            <StarIcon key={s} />
           ))}
           <span className="md:text-[16px] ">(122)</span>
         </div>
-        <p className="md:text-[32px] font-medium mb-[27px]">12 500 FCFA</p>
+        <p className="md:text-[32px] font-medium mb-[27px]">
+          {productDetail?.price} FCFA
+        </p>
         <p className="md:text-[16px] mb-[43px] w-full">
-          Un sérum léger à la vitamine C, conçu pour compléter votre routine et
-          apporter une touche d'éclat à votre peau. Flacon de 30 ml.
+          {productDetail?.description === ''
+            ? 'Aucune description pour ce produit'
+            : productDetail?.description}
         </p>
         <button className="bg-black md:w-[204px] h-[59px] text-white font-semibold mb-[38px] ">
           AJOUTER AU PANIER
@@ -67,9 +89,9 @@ const DetailProduct = () => {
         <div className="w-full max-w-[500px] h-[1px] bg-[#ADADAD] mb-[19px] " />
         <div>
           <p>
-            Produit soigneusement sélectionné. <br />
-            Paiement à la livraison disponible. <br />
-            Pour toute question, contactez notre service client.
+            {productDetail?.ingredients === ''
+              ? 'Aucun ingredient mentienner pour ce produit'
+              : productDetail?.ingredients}
           </p>
         </div>
       </div>
@@ -98,12 +120,12 @@ const DescriptionAvis = () => {
     </div>
   )
 }
-const RelateProduct = () => {
+const RelateProduct = ({ product }: { product: productType[] }) => {
   return (
     <main className="grid justify-center items-center place-items-center mt-[175px] ">
       <TitleBar suject="À découvrir" complement="aussi" bar="right" />
       <div className="mt-[27px] ">
-        <CardProduct view="col-5" data={[1, 2, 4, 6, 5]} />
+        <CardProduct view="col-5" data={product} />
       </div>
     </main>
   )

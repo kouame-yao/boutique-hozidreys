@@ -1,6 +1,6 @@
 import { db } from '#/config/firebase'
 import { ErrorServer } from '#/middlewares/validator'
-import type { productType, stockMouvementType } from '#/schema'
+import type { stockMouvementType } from '#/schema'
 import type { DocumentData, DocumentReference } from 'firebase/firestore'
 import {
   addDoc,

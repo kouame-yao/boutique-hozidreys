@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore'
 
 const collections = 'AdminProduct' as const
+const collectionsStock = 'AdminStockMovement' as const
 
 const createProduct = async (
   data: productType,
@@ -28,7 +29,7 @@ const createProduct = async (
 
 const allProduct = async (): Promise<productType[]> => {
   const querySnapshot = await getDocs(collection(db, collections))
-  const querySnapshotStok = await getDocs(collection(db, 'AdminStockMovement'))
+  const querySnapshotStok = await getDocs(collection(db, collectionsStock))
   const newStock = (productId: string) => {
     return querySnapshotStok.docs
       .filter((docS) => {
@@ -80,6 +81,24 @@ const deleteProduct = async (docId: string) => {
   if (!docId) {
     throw new ErrorServer('Identifiant manquant', 400)
   }
+  const querySnapshotStok = await getDocs(collection(db, collectionsStock))
+  const newStock = (productId: string) => {
+    return querySnapshotStok.docs
+      .filter((docS) => {
+        const data = docS.data() as stockMouvementType
+
+        return data.productId === productId
+      })
+      .reduce((total, stock) => {
+        const data = stock.data() as stockMouvementType
+        return total + (data.type === 'Ajout' ? data.quantity : -data.quantity)
+      }, 0)
+  }
+  const stock = newStock(docId)
+  if (stock !== 0)
+    throw new ErrorServer(
+      'Impossible de supprimer ce produits le stock est suppérieur à 0',
+    )
   const docRef = doc(db, collections, docId)
   const docSnap = await getDoc(docRef)
 

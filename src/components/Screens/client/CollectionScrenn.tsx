@@ -1,21 +1,24 @@
 import CardProduct from '#/components/CardProduct'
 import DropdownIcon from '#/components/icons/DropdownIcon'
 import TitleBar from '#/components/TitleBar'
+import type { productType } from '#/schema'
+import { useState } from 'react'
 
-function CollectionScreen() {
+function CollectionScreen({ product }: { product: productType[] }) {
+  const [filter, setFilter] = useState()
   return (
     <div className="grid md:flex mb-[371px] gap-x-[40px] ">
       <div className=" w-full md:w-[315px] mt-14">
         <Filster />
       </div>
-      <AllCollections />
+      <AllCollections product={product} />
     </div>
   )
 }
 
 export default CollectionScreen
 
-const AllCollections = () => {
+const AllCollections = ({ product }: { product: productType[] }) => {
   return (
     <div>
       <section className="grid md:grid-cols-2 mb-[18px] mt-[18px]">
@@ -52,10 +55,7 @@ const AllCollections = () => {
         </div>
       </section>
       <section>
-        <CardProduct
-          view="col-4"
-          data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]}
-        />
+        <CardProduct view="col-4" data={product} />
       </section>
     </div>
   )

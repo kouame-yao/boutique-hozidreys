@@ -7,15 +7,13 @@ import {
   deleteCategorie,
   updateCategorie,
 } from '#/services/admin/categorie-service'
-import { Logger } from '#/utils/initialiseLogger'
 import { createServerFn } from '@tanstack/react-start'
 
 const createCategorieFn = createServerFn({ method: 'POST' })
   .validator((data: categoryType) => validatorSchema(categorySchema, data))
   .handler(async ({ data }) => {
     try {
-      const addDoc = await createCategorie({ author: 'id-author', ...data })
-      Logger.info(addDoc.id)
+      await createCategorie({ author: 'id-author', ...data })
     } catch (error) {
       console.log(`Erreur detecter : ${error}`)
       throw error
@@ -38,8 +36,7 @@ const updateCategorieFn = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data }) => {
     try {
-      const editDoc = await updateCategorie(data)
-      console.log(editDoc)
+      await updateCategorie(data)
     } catch (error) {
       console.log(`Erreur detecter : ${error}`)
       throw error
@@ -50,8 +47,7 @@ const deleteCategorieFn = createServerFn({ method: 'POST' })
   .validator((data: string) => data)
   .handler(async ({ data }) => {
     try {
-      const editDoc = await deleteCategorie(data)
-      console.log(editDoc)
+      await deleteCategorie(data)
     } catch (error) {
       console.log(`Erreur detecter : ${error}`)
       throw error

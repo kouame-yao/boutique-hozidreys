@@ -1,16 +1,20 @@
+import homeImageHeader from '#/asset/header_img.png'
 import CardProduct from '#/components/CardProduct'
 import ExchangeIcon from '#/components/icons/ExchangeIcon'
 import QualityIcon from '#/components/icons/QualityIcon'
 import SubscriptionNow from '#/components/SubscriptionNow'
-import { SuperscriptIcon } from 'lucide-react'
-import homeImageHeader from '#/asset/header_img.png'
 import TitleBar from '#/components/TitleBar'
+import { useAllProd } from '#/hook/admin-query-hook/product'
+import type { productType } from '#/schema'
+import { SuperscriptIcon } from 'lucide-react'
 function HomeScrenn() {
+  const allProduct = useAllProd()
+  const productData = allProduct.data ?? []
   return (
     <div>
       <HeadesSections />
-      <CollectionBody />
-      <BestSellerBody />
+      <CollectionBody productData={productData} />
+      <BestSellerBody productData={productData} />
       <DetailSupport />
       <div className="mt-[146px] ">
         <SubscriptionNow />
@@ -47,7 +51,7 @@ const HeadesSections = () => {
   )
 }
 
-const CollectionBody = () => {
+const CollectionBody = ({ productData }: { productData: productType[] }) => {
   return (
     <main>
       <section className="grid text-center justify-center items-center place-items-center mb-[44px] ">
@@ -58,13 +62,13 @@ const CollectionBody = () => {
       </section>
       {/* carde section */}
       <section className="px-[30px] ">
-        <CardProduct view="col-5" data={[1, 2, 3, 4, 5, 6]} />
+        <CardProduct view="col-5" data={productData} />
       </section>
     </main>
   )
 }
 
-const BestSellerBody = () => {
+const BestSellerBody = ({ productData }: { productData: productType[] }) => {
   return (
     <main className="mt-[143px] ">
       <section className="grid text-center justify-center items-center place-items-center mb-[44px] ">
@@ -75,7 +79,7 @@ const BestSellerBody = () => {
       </section>
       {/* carde section */}
       <section className="px-[30px]">
-        <CardProduct view="col-4" data={[1, 2, 3, 4, 5]} />
+        <CardProduct view="col-4" data={productData} />
       </section>
     </main>
   )
@@ -104,9 +108,7 @@ const DetailSupport = () => {
       </div>
       <div className="flex flex-col justify-center text-center place-items-center space-y-2">
         <SuperscriptIcon />
-        <p className="font-semibold text-sm md:text-[18px] ">
-          À votre écoute
-        </p>
+        <p className="font-semibold text-sm md:text-[18px] ">À votre écoute</p>
         <p className="text-[#898989] text-sm md:text-[18px] ">
           Notre équipe vous accompagne dans vos choix beauté
         </p>

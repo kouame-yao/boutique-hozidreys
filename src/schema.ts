@@ -4,11 +4,35 @@ export const categorySchema = z.object({
   id: z.string().optional(),
   author: z.string().optional(),
   name: z.string().min(3).max(255),
-  productCount: z.number().min(0),
+  type: z.array(z.string()).min(1, 'Ajoutez au moins un type'),
+  productCount: z.number().optional(),
   description: z.string().optional(),
   created_at: z.date().default(() => new Date()),
   updated_at: z.date().optional(),
 })
+
+export const categoryFormSchema = z
+  .object({
+    id: z.string().optional(),
+    author: z.string().optional(),
+    name: z.string().min(3).max(255),
+    type: z.array(z.object({ value: z.string() })),
+    productCount: z.number().optional(),
+    description: z.string().optional(),
+    created_at: z.date().optional(),
+    updated_at: z.date().optional(),
+  })
+  .refine(
+    ({ type }) => type.some(({ value }) => value.trim().length > 0),
+    { path: ['type'], message: 'Ajoutez au moins un type' },
+  )
+  .transform(({ type, ...category }) => ({
+    ...category,
+    type: type
+      .map(({ value }) => value.trim())
+      .filter((value) => value.length > 0),
+    created_at: category.created_at ?? new Date(),
+  }))
 
 export type categoryType = z.infer<typeof categorySchema>
 

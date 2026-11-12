@@ -1,6 +1,6 @@
 import { db } from '#/config/firebase'
 import { ErrorServer } from '#/middlewares/validator'
-import type { categoryType } from '#/schema'
+import type { categoryType, productType } from '#/schema'
 import type { DocumentData, DocumentReference } from 'firebase/firestore'
 import {
   addDoc,
@@ -13,7 +13,8 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 
-const collections = 'AdminCategory' as const
+const collectionsCategorie = 'AdminCategory' as const
+const collectionsProduct = 'AdminProduct' as const
 
 const createCategorie = async (
   data: categoryType,
@@ -22,16 +23,26 @@ const createCategorie = async (
     throw new ErrorServer('Id manquant', 400)
   }
 
-  return await addDoc(collection(db, collections), data)
+  return await addDoc(collection(db, collectionsCategorie), data)
 }
 
 const allCategorie = async (): Promise<categoryType[]> => {
-  const querySnapshot = await getDocs(collection(db, collections))
+  const querySnapshot = await getDocs(collection(db, collectionsCategorie))
+  const querySnapshotProduct = await getDocs(collection(db, collectionsProduct))
+
+  const count = (categoryId: string) => {
+    return querySnapshotProduct.docs.filter((Doc) => {
+      const data = Doc.data() as productType
+
+      return data.category === categoryId
+    }).length
+  }
   const table: categoryType[] = []
   querySnapshot.forEach((docs) => {
     const data = docs.data()
     table.push({
       id: docs.id,
+      productCount: count(docs.id),
       ...data,
       created_at:
         data.created_at instanceof Timestamp
@@ -51,7 +62,7 @@ const updateCategorie = async (data: Partial<categoryType>) => {
   if (!data.id) {
     throw new ErrorServer('Identifiant manquant', 400)
   }
-  const washingtonRef = doc(db, collections, data.id)
+  const washingtonRef = doc(db, collectionsCategorie, data.id)
   const playsolder: Partial<categoryType> = {
     ...data,
   }
@@ -62,7 +73,20 @@ const deleteCategorie = async (docId: string) => {
   if (!docId) {
     throw new ErrorServer('Identifiant manquant', 400)
   }
-  const docRef = doc(db, collections, docId)
+  const querySnapshotProduct = await getDocs(collection(db, collectionsProduct))
+  const productCountExist = querySnapshotProduct.docs.some((Doc) => {
+    const data = Doc.data() as productType
+
+    return data.category === docId
+  })
+
+  if (productCountExist)
+    throw new ErrorServer(
+      'Impossible de supprimer cette catégorie: Elle est déjà associer à une ou plusieurs produits',
+      '',
+      400,
+    )
+  const docRef = doc(db, collectionsCategorie, docId)
   const docSnap = await getDoc(docRef)
 
   if (!docSnap.exists()) {

@@ -84,8 +84,7 @@ export default function Product({
         setIsOpentEdit(false)
       },
       onError: (error) => {
-        console.log(error)
-        toast.error('Une erreur est survenue')
+        toast.error('Une erreur est survenue', { description: error.message })
       },
     })
   }
@@ -132,7 +131,9 @@ export default function Product({
           >
             <option value={''}>Toutes les catégories</option>
             {arraySelect.map((cat) => (
-              <option value={cat.id}>{cat.name}</option>
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
             ))}
           </select>
         </div>
@@ -223,7 +224,15 @@ function ProductRow({
       <td className="px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[#f7f0eb] text-lg">
-            ✨
+            {product.images?.length === 0 ? (
+              <>✨</>
+            ) : (
+              <img
+                src={product?.images?.[0]}
+                className="flex size-11 object-cover items-center justify-center rounded-xl"
+                alt=""
+              />
+            )}
           </div>
           <span className="font-medium text-[#302724]">{product.name}</span>
         </div>
